@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+  <link rel="stylesheet" href="../css/nes.css">
+	<title>speech game</title>
+</head>
+<body>
+
+
+    <div id="notice"></div>
+    <div class="wrap">
+        <div class="fatboxleft box box1" >Theme:</div>
+        <div class="fatboxright box box2"  id="area1"></div>
+    </div>
+
+    <img id="pic" src="../img/monster02.png" alt="picture of monster" title="monster"  width="150">
+
+    <div class="wrap">
+        <div class="box box1">HP:</div>
+        <div class="box box3" id="hitPoint">
+          <progress class="nes-progress" id ="prg1"value="5" max="5"></progress>
+        </div>
+    </div>
+    <div class="wrap">
+      <div class="fatboxleft box box1">Text:</div>
+      <div class="fatboxright box box2" id="result-div"></div>
+    </div>
+    <div class="wrap">
+        <div class="box box1" >Result:</div>
+        <div class="box box2" id="innerHTMLtxt" style="text-align:center"></div>
+    </div>
+
+
+    
+
+    <button type="button" class="nes-btn" id="start-btn" >Speaking</button>
+
+
+
+</body>
+</html>
+
+
+<script>
+  function OnGet(){
+
+    const URL = "https://script.google.com/macros/s/AKfycbzIr1KvdAGvxbo0w8oQpwXMaaXXenNuQitz1NNBkLiNnB-suYSQOyRE16GmPWZTbN7f/exec";
+
+    fetch(URL)
+    .then(response => {
+      return response.json();
+    })
+    .then(data => {
+      render_text = data.message;
+      document.getElementById("area1").innerHTML = render_text;
+    })
+    .catch(error => {
+      document.getElementById("get_value").innerHTML = error;
+    });
+  }
+
+  const startBtn = document.querySelector('#start-btn');
+  const attackBtn = document.querySelector('#attack-btn');
+  const resultDiv = document.querySelector('#result-div');
+
+  var pics_src = new Array("../img/monster02.png", "../img/monster08.png");
+
+
+  var random = 0;
+  var hp = 5;
+
+  ary = [
+      'I have a pen','I have an apple','What do you do for a living','Can you give me a hand','How are you doing',
+      'Exactly','I must tell you something','You must be joking','I really appreciate it','See you later'
+    ];
+  var fin = false;
+
+  window.SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+  var recognition = new webkitSpeechRecognition();
+
+  recognition.lang = 'en-US';
+  recognition.interimResults = true;
+
+  let finalTranscript = ''; // 確定した(黒の)認識結果
+  let text = '';
+
+  recognition.onsoundstart = (event) => {
+  startBtn.innerHTML = 'Listening...';
+};
+
+  recognition.onsoundend = (event) => {
+    startBtn.innerHTML = 'Speaking';
+    
+};
+
+var bar = document.getElementById('prg1');
+  recognition.onresult = (event) => {
+    let interimTranscript = ''; // 暫定(灰色)の認識結果
+    
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      let transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+        finalTranscript = finalTranscript.concat(render_text.slice(-1));
+        finalTranscript = finalTranscript.charAt(0).toUpperCase() + finalTranscript.slice(1);
+      } else {
+        interimTranscript = transcript;
+      }
+    }
+    resultDiv.innerHTML = finalTranscript;
+    if (finalTranscript != '') {
+      startBtn.innerHTML = 'Speaking';
+        if(render_text.toLowerCase() == finalTranscript.toLowerCase()){
+            innerHTMLtxt.innerHTML = "GOOD";
+            bar.value--;
+            if(!bar.value){
+                cong();
+            }
+        }
+        else {
+            innerHTMLtxt.innerHTML = "BAD";
+            bar.value++;
+        }
+    }
+
+
+  }
+
+  startBtn.onclick = () => {
+    if(bar.value){
+      finalTranscript = ''; 
+      innerHTMLtxt.innerHTML = "";
+      recognition.start();
+      resultDiv.innerHTML = finalTranscript;
+      
+      OnGet();
+      random = Math.floor( Math.random() * 10 );
+    }
+  }
+
+
+  function cong(){
+    area1.innerHTML = "Congratulations";
+    document.getElementById("pic").src = pics_src[1];
+  }
+</script>
